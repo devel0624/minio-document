@@ -32,7 +32,7 @@ Arrange the contents of your request (host, action, headers, etc.) into a standa
 
 
 [예시로 사용될 요청 #2-1-1-example-http-request](#2-1-1-example-http-request) 을 토대로 아래의 규칙에 따라 표준 요청을 생성
-```http
+```md
 <HTTP_METHOD>
 <Canonical_URI>
 <Canonical_Query_String>
@@ -41,7 +41,7 @@ Arrange the contents of your request (host, action, headers, etc.) into a standa
 <PAYLOAD_HASH>
 ```
 
-```http
+```md
 GET
 /path
 
@@ -147,7 +147,7 @@ echo -n "20250213" | openssl mac -digest sha256 -macopt key:AWS4MySecret HMAC
 2366BFC7DF66AFBE5FE0E0AD69FA99C21B6DEA1CB3FF580541BF919BC63E5C8C
 ```
 
-##### DateRegionKey 
+##### DateRegionKey
 
 ###### Shell Command
 ```bash
