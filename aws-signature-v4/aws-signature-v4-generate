@@ -1,0 +1,105 @@
+#! /usr/bin/env bash
+
+# 색상 정의
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m'  # No Color
+
+bucket_name='/path'
+host='server-host'
+
+x_amz_content='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' # empty value, sha256
+x_amz_date=$(date -u +"%Y%m%dT%H%M%SZ")
+date_stamp=$(date -u +"%Y%m%d")
+region=us-east-1
+service=s3
+termination_string=aws4_request
+signed_headers="host;x-amz-content-sha256;x-amz-date"
+algorithm='AWS4-HMAC-SHA256'
+
+# 디버깅용 플래그
+verbose=false
+if [[ "$1" == "-v" || "$2" == "-v" ]]; then
+    verbose=true
+else
+    echo -e "${RED}Warning: Only the '-v' option is supported. Ignoring other inputs.${NC}"
+fi
+
+# access_key와 secret_key 입력
+echo -e -n "${GREEN}Enter Access Key: ${NC}"
+read -s access_key
+echo
+
+echo -e -n "${GREEN}Enter Secret Key: ${NC}"
+read -s secret_key
+echo
+
+# Canonical Request
+hashed_canonical_request=$(echo -n \
+    "PUT
+$bucket_name
+
+host:$host
+x-amz-content-sha256:$x_amz_content
+x-amz-date:$x_amz_date
+
+$signed_headers
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" |
+    openssl dgst -sha256 -r | cut -d' ' -f1)
+
+# Credential Scope
+credential_scope="$date_stamp/$region/$service/$termination_string"
+
+# String to Sign
+string_to_sign="$algorithm
+$x_amz_date
+$credential_scope
+$hashed_canonical_request"
+
+# Aws Signature
+algorithm_secret="AWS4"$secret_key
+date_key=$(echo -n "$date_stamp" | openssl mac -digest sha256 -macopt key:$algorithm_secret HMAC)
+
+date_region_key=$(echo -n "$region" | openssl mac -digest sha256 -macopt hexkey:$date_key HMAC)
+
+date_region_service_key=$(echo -n "$service" | openssl mac -digest sha256 -macopt hexkey:$date_region_key HMAC)
+
+signing_key=$(echo -n "$termination_string" | openssl mac -digest sha256 -macopt hexkey:$date_region_service_key HMAC)
+
+signature=$(echo -n "$string_to_sign" | openssl mac -digest sha256 -macopt hexkey:$signing_key HMAC | tr 'A-F' 'a-f')
+
+# Debug
+if $verbose; then
+    echo "##### Debug Section #####"
+    echo -e "${YELLOW}Bucket: ${NC}$bucket_name"
+    echo -e "${YELLOW}Host: ${NC}$host"
+    masked_access_key=$(echo -n "$access_key" | sed -e 's/^\(.\).*\(.\)$/\1****\2/')
+    echo -e "${YELLOW}Access: ${NC}$masked_access_key"
+    masked_secret_key=$(echo -n "$secret_key" | sed -e 's/^\(.\).*\(.\)$/\1****\2/')
+    echo -e "${YELLOW}Secret: ${NC}$masked_secret_key"
+    echo -e "${YELLOW}x-amz-content-sha256: ${NC}$x_amz_content"
+    echo -e "${YELLOW}x-amz-date: ${NC}$x_amz_date"
+    echo -e "${YELLOW}Date Stamp: ${NC}$date_stamp"
+    echo -e "${YELLOW}Region: ${NC}$region"
+    echo -e "${YELLOW}Service: ${NC}$service"
+    echo -e "${YELLOW}Termination String: ${NC}$termination_string"
+    echo -e "${YELLOW}Signed Headers: ${NC}$signed_headers"
+    echo -e "${YELLOW}Algorithm: ${NC}$algorithm"
+    echo -e "${YELLOW}Credential Scope: ${NC}$credential_scope"
+    echo -e "${YELLOW}String to Sign: ${NC}$string_to_sign"
+    masked_algorithm_secret=$(echo -n "$algorithm_secret" | sed -e 's/^\(.....\).*\(.\)$/\1****\2/')
+    echo -e "${YELLOW}Algorith Secret: ${NC}$masked_algorithm_secret"
+    echo -e "${YELLOW}Date Key: ${NC}$date_key"
+    echo -e "${YELLOW}Date Region Key: ${NC}$date_region_key"
+    echo -e "${YELLOW}Date Region Service Key: ${NC}$date_region_service_key"
+    echo -e "${YELLOW}Signing Key: ${NC}$signing_key"
+    echo -e "${YELLOW}Signature: ${NC}$signature"
+    echo "##### Debug Section #####"
+    echo
+fi
+
+# Authorization 헤더 구성
+echo -e "Authorization:$algorithm Credential=$access_key/$credential_scope, SignedHeaders=$signed_headers, Signature=$signature"
+echo -e "X-Amz-Content-Sha256:$x_amz_content"
+echo -e "X-Amz-Date:$x_amz_date"
