@@ -6,7 +6,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m'  # No Color
 
-x_amz_content='27aae9654a8903987aafa42a678582a19f430d22788b3e9630f496e78a5442ab' # empty value, sha256
+x_amz_content='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' # empty value, sha256
 x_amz_date=$(date -u +"%Y%m%dT%H%M%SZ")
 date_stamp=$(date -u +"%Y%m%d")
 region=us-east-1
