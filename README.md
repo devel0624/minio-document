@@ -477,9 +477,9 @@ Date: Mon, 17 Feb 2025 02:31:09 GMT
 POST /{{bucket-name}}/{{resource-name}}?uploads HTTP/1.1
 ```
 
-대용량 파일 업로드를 위해 멀티 파트 업로드 요청을 생성한다.
-응답으로 돌아오는 업로드 ID 를 이용하여, 이후 API 들을 처리한다.
-
+대용량 파일 업로드를 위해 멀티 파트 업로드 요청을 생성한다.  
+응답으로 돌아오는 업로드 ID 를 이용하여, 이후 API 들을 처리한다.  
+ 
 ##### Example 
 
 ###### Request 
@@ -522,9 +522,9 @@ Date: Mon, 17 Feb 2025 04:45:52 GMT
 PUT /{{bucket-name}}/{{resource-name}}?partNumber={{part-number}}&uploadId={{uploadId}} HTTP/1.1
 ```
 
-업로드 생성에서 받은 ID 를 이용하여 각 파트를 업로드한다.
-partNumber 는 각 파트들이 나열될 순서이다.
-아래에서는 3개의 부분으로 나눠진 멀티 파트 업로드 요청 예시이며 각 응답의 ETag 를 이용하여 최종적으로 멀티 파트 업로드를 완료한다.
+업로드 생성에서 받은 ID 를 이용하여 각 파트를 업로드한다.  
+partNumber 는 각 파트들이 나열될 순서이다.  
+아래에서는 3개의 부분으로 나눠진 멀티 파트 업로드 요청 예시이며 각 응답의 ETag 를 이용하여 최종적으로 멀티 파트 업로드를 완료한다.  
 
 ##### Example 
 
