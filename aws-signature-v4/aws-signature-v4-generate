@@ -6,10 +6,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m'  # No Color
 
-bucket_name='/path'
-host='server-host'
-
-x_amz_content='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855' # empty value, sha256
+x_amz_content='27aae9654a8903987aafa42a678582a19f430d22788b3e9630f496e78a5442ab' # empty value, sha256
 x_amz_date=$(date -u +"%Y%m%dT%H%M%SZ")
 date_stamp=$(date -u +"%Y%m%d")
 region=us-east-1
@@ -18,12 +15,65 @@ termination_string=aws4_request
 signed_headers="host;x-amz-content-sha256;x-amz-date"
 algorithm='AWS4-HMAC-SHA256'
 
-# 디버깅용 플래그
+host=""
+method=""
+path=""
 verbose=false
-if [[ "$1" == "-v" || "$2" == "-v" ]]; then
-    verbose=true
-else
-    echo -e "${RED}Warning: Only the '-v' option is supported. Ignoring other inputs.${NC}"
+
+# 입력된 옵션 처리
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -host)
+            if [[ -n "$2" && ! "$2" =~ ^- ]]; then
+                host="$2"
+                shift 2
+            else
+                echo "오류: -host 옵션에는 값이 필요합니다." >&2
+                exit 1
+            fi
+            ;;
+        -method)
+            if [[ -n "$2" && ! "$2" =~ ^- ]]; then
+                method=$(echo "$2" | tr '[:lower:]' '[:upper:]')  # 대문자로 변환
+                shift 2
+            else
+                echo "오류: -method 옵션에는 값이 필요합니다." >&2
+                exit 1
+            fi
+            ;;
+        -path)
+            if [[ -n "$2" && ! "$2" =~ ^- ]]; then
+                path="$2"
+                shift 2
+            else
+                echo "오류: -path 옵션에는 값이 필요합니다." >&2
+                exit 1
+            fi
+            ;;
+        -params)
+            if [[ -n "$2" && ! "$2" =~ ^- ]]; then
+                params="$2"
+                shift 2
+            else
+                echo "오류: -params 옵션에는 값이 필요합니다." >&2
+                exit 1
+            fi
+            ;;
+        -v)
+            verbose=true
+            shift
+            ;;
+        *)
+            echo "알 수 없는 옵션: $1" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# 필수 옵션 확인
+if [[ -z "$host" || -z "$method" || -z "$path" ]]; then
+    echo "❌ 오류: -host와 -method, -path 옵션은 필수입니다." >&2
+    exit 1
 fi
 
 # access_key와 secret_key 입력
@@ -37,15 +87,15 @@ echo
 
 # Canonical Request
 hashed_canonical_request=$(echo -n \
-    "PUT
-$bucket_name
-
+    "$method
+$path
+$params
 host:$host
 x-amz-content-sha256:$x_amz_content
 x-amz-date:$x_amz_date
 
 $signed_headers
-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" |
+$x_amz_content" |
     openssl dgst -sha256 -r | cut -d' ' -f1)
 
 # Credential Scope
@@ -72,29 +122,46 @@ signature=$(echo -n "$string_to_sign" | openssl mac -digest sha256 -macopt hexke
 # Debug
 if $verbose; then
     echo "##### Debug Section #####"
-    echo -e "${YELLOW}Bucket: ${NC}$bucket_name"
+
+    echo "###### Request ######"
+
     echo -e "${YELLOW}Host: ${NC}$host"
+    echo -e "${YELLOW}Method: ${NC}$method"
+    echo -e "${YELLOW}Path: ${NC}$path"
+    echo -e "${YELLOW}Params: ${NC}$params"
+
+    echo "###### Security ######"
+
     masked_access_key=$(echo -n "$access_key" | sed -e 's/^\(.\).*\(.\)$/\1****\2/')
     echo -e "${YELLOW}Access: ${NC}$masked_access_key"
     masked_secret_key=$(echo -n "$secret_key" | sed -e 's/^\(.\).*\(.\)$/\1****\2/')
     echo -e "${YELLOW}Secret: ${NC}$masked_secret_key"
+
+    echo "###### Authorization ######"
+
     echo -e "${YELLOW}x-amz-content-sha256: ${NC}$x_amz_content"
     echo -e "${YELLOW}x-amz-date: ${NC}$x_amz_date"
+    echo -e "${YELLOW}Signed Headers: ${NC}$signed_headers"
+
+    echo -e "${YELLOW}Algorithm: ${NC}$algorithm"
+    
     echo -e "${YELLOW}Date Stamp: ${NC}$date_stamp"
     echo -e "${YELLOW}Region: ${NC}$region"
     echo -e "${YELLOW}Service: ${NC}$service"
     echo -e "${YELLOW}Termination String: ${NC}$termination_string"
-    echo -e "${YELLOW}Signed Headers: ${NC}$signed_headers"
-    echo -e "${YELLOW}Algorithm: ${NC}$algorithm"
     echo -e "${YELLOW}Credential Scope: ${NC}$credential_scope"
+
+    echo "###### Signature ######"
+
     echo -e "${YELLOW}String to Sign: ${NC}$string_to_sign"
     masked_algorithm_secret=$(echo -n "$algorithm_secret" | sed -e 's/^\(.....\).*\(.\)$/\1****\2/')
-    echo -e "${YELLOW}Algorith Secret: ${NC}$masked_algorithm_secret"
+    echo -e "${YELLOW}Algorithm Secret: ${NC}$masked_algorithm_secret"
     echo -e "${YELLOW}Date Key: ${NC}$date_key"
     echo -e "${YELLOW}Date Region Key: ${NC}$date_region_key"
     echo -e "${YELLOW}Date Region Service Key: ${NC}$date_region_service_key"
     echo -e "${YELLOW}Signing Key: ${NC}$signing_key"
     echo -e "${YELLOW}Signature: ${NC}$signature"
+
     echo "##### Debug Section #####"
     echo
 fi
@@ -103,3 +170,5 @@ fi
 echo -e "Authorization:$algorithm Credential=$access_key/$credential_scope, SignedHeaders=$signed_headers, Signature=$signature"
 echo -e "X-Amz-Content-Sha256:$x_amz_content"
 echo -e "X-Amz-Date:$x_amz_date"
+
+
