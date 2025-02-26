@@ -161,7 +161,7 @@ echo -n "us-east-1" | openssl mac -digest sha256 -macopt hexkey:2366BFC7DF66AFBE
 ```
 
 ###### Output
-```sh
+```
 E1CD5FE5F51BF1645524B5A9DABD7D2A90A2CE98336C281196EE42B54C8578C7
 ```
 
@@ -178,7 +178,7 @@ echo -n "s3" | openssl mac -digest sha256 -macopt hexkey:E1CD5FE5F51BF1645524B5A
 ```
 
 ###### Output
-```sh
+```
 A71C65C4BFE431D13B270D7C84AB09D40AA85F7DB0C964F8F80B9A8FB0D7D3D7
 ```
 
@@ -194,7 +194,7 @@ echo -n "aws4_request" | openssl mac -digest sha256 -macopt hexkey:${date-region
 echo -n "aws4_request" | openssl mac -digest sha256 -macopt hexkey:A71C65C4BFE431D13B270D7C84AB09D40AA85F7DB0C964F8F80B9A8FB0D7D3D7 HMAC
 ```
 ###### Output
-```sh
+```
 270D7180AB6395D7C559B527D3A36A91ED658BE5D75205288A98C7E5227D0E86
 ```
 
@@ -224,7 +224,7 @@ echo -n "AWS4-HMAC-SHA256
 ```
 
 ###### Output
-```sh
+```
 8C37E474CA5F33DEB259D4B7F91056DD7976F83EE08533FEDC49621E6B67C489
 ```
 
@@ -270,7 +270,7 @@ PUT /{{bucket-name}} HTTP/1.1
 
 ###### Request 
 
-```http
+```http request
 PUT /miniouser HTTP/1.1
 Host: storage.java21.net:8000
 Authorization: AWS4-HMAC-SHA256 Credential=jH83zk4JzMss13efvpUY/20250217/us-east-1/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=a139901ddd9893e5d1bcea839ba0c2ed176754fcb18f57510ec229e6a882eb00
