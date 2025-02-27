@@ -2,10 +2,8 @@ package com.nhnacademy.practice.minio;
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-import java.util.List;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.Bucket;
-import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
+import software.amazon.awssdk.services.s3.paginators.ListBucketsIterable;
 
 /**
  * List your Amazon S3 buckets.
@@ -17,17 +15,12 @@ public class ListBuckets {
     public static void main(String[] args) {
         final S3Client s3 = MinioClient.create();
 
-        ListBucketsResponse response = s3.listBuckets();
+        listAllBuckets(s3);
+    }
 
-        if (response.hasBuckets()) {
-            System.out.println("Your Amazon S3 buckets are:");
-
-            List<Bucket> buckets = response.buckets();
-            for (Bucket b : buckets) {
-                System.out.println("* " + b.name());
-            }
-        } else {
-            System.out.println("No buckets found");
-        }
+    public static void listAllBuckets(S3Client s3) {
+        ListBucketsIterable response = s3.listBucketsPaginator();
+        response.buckets().forEach(bucket ->
+                System.out.println("Bucket Name: " + bucket.name()));
     }
 }

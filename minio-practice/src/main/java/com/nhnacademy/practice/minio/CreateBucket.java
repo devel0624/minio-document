@@ -72,9 +72,7 @@ public class CreateBucket {
                 "The bucket name must be unique, or an error will result.\n";
 
 
-        String userName = "project-be0-myteamname";
-
-        String bucket_name = userName;
+        String bucket_name = MinioClient.sample_bucket_name;
 
         System.out.format("\nCreating S3 bucket: %s\n", bucket_name);
         Bucket b = createBucket(bucket_name);
