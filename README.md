@@ -17,6 +17,8 @@ minio API 는 AWS Signature v4 방식의 Authorization 헤더를 포함해야한
 [https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html](https://docs.aws.amazon.com/AmazonS3/latest/API/sig-v4-authenticating-requests.html)
 [https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-create-signed-request.html](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-create-signed-request.html)
 
+2-1 섹션에서는 인증 헤더가 실제로 어떻게 구성되는 것인지 이해를 돕고자 하는 예시이므로 참고는 하되, 실제 자바 코드로 작성할 때에는  [## 3. AWS Java SDK 를 이용한 API 호출](#3-AWS-Java-SDK-를-이용한-API-호출)
+
 #### 2-1-1. Example Http Request
 ```http
 GET /path HTTP/1.1
@@ -678,7 +680,30 @@ Date: Mon, 17 Feb 2025 05:27:33 GMT
 ```
 
 
-#### Access Policy 
+## 3. AWS Java SDK 를 이용한 API 호출
+
+### Ref. 
+[https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/javav2/example_code/s3](https://github.com/awsdocs/aws-doc-sdk-examples/tree/main/javav2/example_code/s3)
+
+### 예시 코드
+ 
+[minio-practice](minio-practice) 프로젝트 참조. 기본적인 API 호출 방식을 알려주고자 하는 코드이기 때문에, 예외처리 등이 미흡하므로 그대로 따라쓰지 않기를 강력히 권고한다. 반드시 상단의 AWS 문서 혹은 Minio 문서를 참조.
+실제로 아마존 S3 서비스는 버킷의 경로 형식은 더이상 지원하지 않고 가상 호스트 형식을 사용하지만, Minio 서버는 기본값으로 경로 형식을 지원한다. 따라서 SDK 사용시 경로 형식을 사용할 수 있도록 클라이언트 객체에 설정해줄 필요가 있다.
+
+#### Path Style
+
+```http request
+http://minio-server-host/bucket-name/resource
+```
+
+#### Virtual Host Style
+
+```http request
+http://bucket-name.minio-server-host/resource
+```
+
+
+## Access Policy 
 
 ```json
 {
